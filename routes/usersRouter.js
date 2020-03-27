@@ -8,16 +8,19 @@ const pool = require('../database/config.js')
 const hashPassword = require('../database/helpers/bcryptHelpers.js').hashPassword
 
 const sessionOptions = {
+  store: new pgSession({
+    pool: pool,
+    tablename: "sessions",
+    sidfilename: "sid",
+    createTable: true,
+  }),
   name: "messageAppSession",
   secret: "akioannbkd35418dadfak5478632dadf5ekke5973kjf",
   cookie: {
     maxAge: 1000 * 60 * 60,
   },
   resave: false,
-  store: new pgSession({
-    pool: pool,
-    tablename: "sessions",
-  })
+  saveUninitialized: false,
 };
 
 router.use(session(sessionOptions));
@@ -78,5 +81,7 @@ router.get('/logout', async(req, res) => {
     console.log(err);
   }
 });
+
+module.exports=router;
 
 

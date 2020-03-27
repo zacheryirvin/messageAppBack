@@ -13,9 +13,8 @@ const usersTb = {
     select * from users
     where user_name = '${user_name}'
     `)
-  }
+  },
   deleteUser: (id) => {
-    const {id} = id;
     return query(`
     delete from users
     where id = '${id}'
@@ -23,7 +22,6 @@ const usersTb = {
   },
   updateUser: (id, user) => {
     const {first_name, last_name, user_name, email, password} = user;
-    const {id} = id;
     return query(`
     update users
     set first_name = '${first_name}',

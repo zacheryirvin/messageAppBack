@@ -1,12 +1,14 @@
 const query = require('./query.js');
 const faker = require('faker');
+const hashPassword = require('../database/helpers/bcryptHelpers.js').hashPassword;
 
 const insertUsers = async () => {
+  const objectPass = {password: 'test'};
+  const hash = await hashPassword(objectPass)
   const i = await query(`
-  insert into users(first_name, last_name, user_name, email)
-  values('${faker.name.firstName()}', '${faker.name.lastName()}', '${faker.internet.userName()}', '${faker.internet.email()}')
+  insert into users(first_name, last_name, user_name, email, password)
+  values('${faker.name.firstName()}', '${faker.name.lastName()}', '${faker.internet.userName()}', '${faker.internet.email()}', '${hash}')
   `)
-  return i;
 }
 
 const insertFriends = async () => {
@@ -60,5 +62,5 @@ const insertMessages = async () => {
 // for (let i = 0; i < 100; i++) {
   // insertUsers();
 // }
-// insertFriends();
+insertFriends();
 insertMessages();

@@ -27,8 +27,9 @@ const db = {
         id uuid default uuid_generate_v4() primary key,
         first_name varchar(100) default null,
         last_name varchar(100) default null,
-        user_name varchar(100) not null,
-        email varchar(100) not null
+        user_name varchar(100) not null unique,
+        email varchar(100) not null unique,
+        password varchar(250) not null 
       )
     `)
       console.log('users', createUsers);

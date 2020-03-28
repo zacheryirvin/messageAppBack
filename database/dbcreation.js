@@ -29,7 +29,7 @@ const db = {
         last_name varchar(100) default null,
         user_name varchar(100) not null unique,
         email varchar(100) not null unique,
-        password varchar(250) not null 
+        password varchar(250) not null unique
       )
     `)
       console.log('users', createUsers);
@@ -37,6 +37,8 @@ const db = {
         create table if not exists friends(
           user_id uuid references users(id) not null,
           friend_id uuid references users(id) not null,
+          pending boolean not null,
+          confirmed boolean not null,
           primary key(user_id, friend_id)
         )
         `)

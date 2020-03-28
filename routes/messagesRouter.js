@@ -4,9 +4,10 @@ const messageDb = require('../database/actions/messageActions.js');
 
 router.get('/', async (req,res) => {
   try {
-    const {userId, toId} = req.body;
+    const {toId} = req.body;
+    const userId = req.session.user.id
     const conversation = await messageDb.getConversation(userId, toId);
-    return res.status(200).json(conversation.rows);
+    return res.status(200).json(conversation['rows']);
   } catch (err) {
     console.log(err);
   }
@@ -14,7 +15,8 @@ router.get('/', async (req,res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const {userId, toId, message} = req.body;
+    const {toId, message} = req.body;
+    const {userId} = req.session.user;
     const friendCheck = await messageDb.friendCheck(userId, toId);
     if (friendCheck['rows'][0]['isfriend'] === true) {
       const sendMessage = await messageDb.addMessage(userId, toId, message);
@@ -28,7 +30,8 @@ router.post('/', async (req, res) => {
 
 router.delete('/', async (req, res) => {
   try {
-    const {userId, toId} = req.body;
+    const {toId} = req.body;
+    const {userId} = req.session.user;
     const deleteConversation = await messageDb.deleteConversation(userId, toId);
     return res.status(204).json(deleteConversation);
   }catch(err) {

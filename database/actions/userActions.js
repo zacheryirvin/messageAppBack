@@ -33,3 +33,5 @@ const usersTb = {
      `)
   }
 }
+
+module.exports=usersTb;

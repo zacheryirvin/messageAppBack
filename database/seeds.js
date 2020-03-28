@@ -22,9 +22,9 @@ const insertFriends = async () => {
     const userId = i[index]['id'];
     const toId = i[secIndex]['id'];
     const insertOne = await query(`
-      insert into friends(user_id, friend_id)
-      values('${userId}', '${toId}'),
-      ('${toId}', '${userId}')
+      insert into friends(user_id, friend_id, pending, confirmed)
+      values('${userId}', '${toId}', false, true),
+      ('${toId}', '${userId}', false, true)
     `)
   }
 }
@@ -34,6 +34,7 @@ const insertMessages = async () => {
   select * from users
   `)
   i = i['rows']
+  console.log(i)
   for (let j = 0; j < 1000; j++) {
     const index = Math.floor(Math.random() * (i.length - 1)) + 1;
     const userId = i[index]['id'];

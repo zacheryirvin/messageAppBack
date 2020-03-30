@@ -3,7 +3,7 @@ const query = require('../query.js')
 const friendsTb = {
   getFriends: (userId) => {
     return query(`
-    select * from users
+    select id, first_name, last_name, user_name, email from users
     where id in (select friend_id 
       from friends 
       where user_id = '${userId}'

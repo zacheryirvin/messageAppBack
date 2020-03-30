@@ -1,6 +1,6 @@
 const express = require('express');
 const usersDb = require('../database/actions/userActions.js');
-const bcrypt = require('bcryptjs');
+// const bcrypt = require('bcryptjs');
 const router = express.Router();
 const hashPassword = require('../database/helpers/bcryptHelpers.js').hashPassword
 const login = require('./helpers/helpers.js').login
@@ -22,7 +22,9 @@ router.post('/register', async (req, res) => {
 });
 
 router.post('/login', login, async (req, res) => {
-  res.status(200).json({Message: 'Successfully Logged In'})
+  res.status(200).json({Message: 'Successfully Logged In',
+    user: req.session.user
+  })
 });
 
 router.get('/logout', async(req, res) => {

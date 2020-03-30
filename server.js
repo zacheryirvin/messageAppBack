@@ -13,18 +13,18 @@ const pool = require('./database/config.js')
 const sessionOptions = {
   store: new pgSession({
     pool: pool,
-    tablename: "sessions",
-    sidfilename: "sid",
-    createTable: true,
   }),
   name: "messageAppSession",
   secret: "akioannbkd35418dadfak5478632dadf5ekke5973kjf",
   cookie: {
     maxAge: 1000 * 60 * 60,
+    httpOnly: false,
   },
   resave: false,
-  saveUninitialized: false,
+  saveUninitialized: true,
 };
+
+const theSession = session(sessionOptions)
 
 const {
   friendsRouter,
@@ -32,9 +32,18 @@ const {
   usersRouter,
 } = require('./routes/index.js')
 
+server.use(theSession);
+server.use( (req, res, next) => {
+  res.header('Access-Control-Allow-Credentials', true);
+  res.header('Access-Control-Allow-Origin', req.headers.origin);
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,UPDATE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept');
+  next();
+});
+
+server.use(helm())
 server.use(express.json());
-server.use(session(sessionOptions));
-server.use('/friends', restrictedCheck, friendsRouter);
+server.use('/friends', friendsRouter);
 server.use('/messages', restrictedCheck, messagesRouter);
 server.use('/users', usersRouter);
 

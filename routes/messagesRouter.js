@@ -2,9 +2,9 @@ const express = require('express');
 const router = express.Router();
 const messageDb = require('../database/actions/messageActions.js');
 
-router.get('/', async (req,res) => {
+router.get('/:id', async (req,res) => {
   try {
-    const {toId} = req.body;
+    const toId = req.params.id
     const userId = req.session.user.id
     const conversation = await messageDb.getConversation(userId, toId);
     return res.status(200).json(conversation['rows']);

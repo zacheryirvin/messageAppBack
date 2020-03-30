@@ -27,6 +27,17 @@ router.post('/login', login, async (req, res) => {
   })
 });
 
+router.get('/', async (req, res) => {
+  const user = req.session.user;
+  try {
+    user
+      ? res.status(200).json({Message: 'Logged In', user: user})
+      : res.status(400).json({Message: '{Please Log in / Sign up}'})
+  } catch (err) {
+    console.log(err);
+  }
+})
+
 router.get('/logout', async(req, res) => {
   try {
     req.session.destroy(err => {

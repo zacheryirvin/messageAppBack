@@ -43,7 +43,7 @@ server.use( (req, res, next) => {
 
 server.use(helm())
 server.use(express.json());
-server.use('/friends', friendsRouter);
+server.use('/friends', restrictedCheck, friendsRouter);
 server.use('/messages', restrictedCheck, messagesRouter);
 server.use('/users', usersRouter);
 

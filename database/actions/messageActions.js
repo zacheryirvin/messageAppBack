@@ -7,6 +7,7 @@ const messageTb = {
       select id, from_id, to_id, (to_char(time_stp, 'mm-dd-yy hh24:mi:ss')) date, message from messages
       where from_id = '${userId}' and to_id = '${toId}' 
       or to_id = '${userId}' and from_id = '${toId}' 
+      order by time_stp desc
     `)
   },
   addMessage: (userId, toId, message) => {

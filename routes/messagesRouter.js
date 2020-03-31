@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const messageDb = require('../database/actions/messageActions.js');
+const restrictedCheck = require('./helpers/helpers.js').restricted
 
-router.get('/:id', async (req,res) => {
+router.get('/:id', restrictedCheck, async (req,res) => {
   try {
     const toId = req.params.id
     const userId = req.session.user.id
@@ -13,10 +14,10 @@ router.get('/:id', async (req,res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', restrictedCheck, async (req, res) => {
   try {
     const {toId, message} = req.body;
-    const {userId} = req.session.user;
+    const userId = req.session.user.id;
     const friendCheck = await messageDb.friendCheck(userId, toId);
     if (friendCheck['rows'][0]['isfriend'] === true) {
       const sendMessage = await messageDb.addMessage(userId, toId, message);
@@ -28,7 +29,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.delete('/', async (req, res) => {
+router.delete('/', restrictedCheck, async (req, res) => {
   try {
     const {toId} = req.body;
     const {userId} = req.session.user;

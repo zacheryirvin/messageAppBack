@@ -22,6 +22,7 @@ const sessionOptions = {
   },
   resave: false,
   saveUninitialized: true,
+  key: 'express.sid'
 };
 
 const theSession = session(sessionOptions)
@@ -33,19 +34,26 @@ const {
 } = require('./routes/index.js')
 
 server.use(theSession);
-server.use( (req, res, next) => {
+const middle =  async (req, res, next) => {
   res.header('Access-Control-Allow-Credentials', true);
   res.header('Access-Control-Allow-Origin', req.headers.origin);
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,UPDATE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, X-HTTP-Method-Override, Accept, Content-Type');
   next();
-});
-
+}
+// server.use( (req, res, next) => {
+  // res.header('Access-Control-Allow-Credentials', true);
+  // res.header('Access-Control-Allow-Origin', req.headers.origin);
+  // res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,UPDATE,OPTIONS');
+  // res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, X-HTTP-Method-Override, Accept, Content-Type');
+  // next();
+// });
+server.use(middle)
 server.use(helm())
 server.use(express.json());
-server.use('/friends', restrictedCheck, friendsRouter);
-server.use('/messages', restrictedCheck, messagesRouter);
-server.use('/users', usersRouter);
+server.use('/friends', friendsRouter);
+server.use('/messages', messagesRouter);
+server.use('/users', middle, usersRouter);
 
 server.get('/', (req, res) => {
   res.send('Test of Server Running')

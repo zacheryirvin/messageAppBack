@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const usersDb = require('../../database/actions/userActions.js')
 
 const restricted = async (req, res, next) => {
+  console.log(req.session);
   if (req.session && req.session.user) {
     next();
   } else {

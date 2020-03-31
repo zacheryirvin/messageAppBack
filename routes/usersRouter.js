@@ -40,6 +40,7 @@ router.get('/', async (req, res) => {
 
 router.get('/logout', async(req, res) => {
   try {
+    req.session.cookie.expires = new Date();
     req.session.destroy(err => {
       if (err) {
         res.status(400).json({Error: 'There was a problem logging out'})

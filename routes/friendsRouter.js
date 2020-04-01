@@ -13,4 +13,19 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.delete('/', async (req, res) => {
+  try {
+    const {toId} = req.body
+    const id = req.session.user.id
+    toId.forEach(async (x) => {
+      console.log(id, x)
+      const del = await friendsDb.deleteFriend(id, x)
+      console.log(del)
+    })
+    return res.status(200).json({Message: "Friends deleted"})
+  }catch (err) {
+    console.log(err);
+  } 
+})
+
 module.exports=router;

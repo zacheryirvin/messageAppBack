@@ -4,6 +4,7 @@ const usersDb = require('../database/actions/userActions.js');
 const router = express.Router();
 const hashPassword = require('../database/helpers/bcryptHelpers.js').hashPassword
 const login = require('./helpers/helpers.js').login
+const restrictedCheck = require('./helpers/helpers.js').restricted
 
 router.post('/register', async (req, res) => {
   let newUser = req.body;
@@ -34,6 +35,15 @@ router.get('/', async (req, res) => {
       ? res.status(200).json({Message: 'Logged In', user: user})
       : res.status(400).json({Message: '{Please Log in / Sign up}'})
   } catch (err) {
+    console.log(err);
+  }
+})
+
+router.get('/all', restrictedCheck, async(req, res) => {
+  try {
+    const users = await usersDb.getAllUsers()
+    return res.status(200).json(users['rows'])
+  }catch (err) {
     console.log(err);
   }
 })

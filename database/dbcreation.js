@@ -37,8 +37,8 @@ const db = {
         create table if not exists friends(
           user_id uuid references users(id) not null,
           friend_id uuid references users(id) not null,
-          pending boolean not null,
-          confirmed boolean not null,
+          pending boolean default null,
+          confirmed boolean not null default false,
           primary key(user_id, friend_id)
         )
         `)

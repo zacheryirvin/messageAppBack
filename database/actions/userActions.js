@@ -31,6 +31,13 @@ const usersTb = {
     set password = '${password}'
     where id = '${id}'
      `)
+  },
+  getAllUsers: () => {
+    return query(`
+    select id, first_name, last_name, user_name, email 
+    from users
+    order by user_name;
+   `)
   }
 }
 

@@ -19,7 +19,8 @@ const messageTb = {
   friendCheck: (userId, toId) => {
     return query(`
     select ('${toId}' in (select friend_id
-      from friends where user_id = '${userId}')) isFriend
+      from friends where user_id = '${userId}' and 
+      confirmed = true)) isFriend
     `)
   },
   deleteConversation: (userId, toId) => {

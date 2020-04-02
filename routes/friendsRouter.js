@@ -7,6 +7,7 @@ router.get('/', restrictedCheck, async (req, res) => {
   try {
     const id = req.session.user.id
     const friends = await friendsDb.getFriends(id);
+    console.log(friends)
     return res.status(200).json(friends['rows']);
   } catch (err) {
     console.log(err);
@@ -17,9 +18,11 @@ router.post('/add', restrictedCheck, async (req, res) => {
   try {
     const {toId} = req.body;
     const id = req.session.user.id;
+    console.log(id)
+    console.log(toId)
     const requestFriend = await friendsDb.addFriend(id, toId);
-    console.log(requestFriend);
-    res.status(201).json({Message: 'Friend Requested'})
+    // console.log(requestFriend);
+    res.status(201).json(requestFriend)
   }catch(err) {
     console.log(err);
   }

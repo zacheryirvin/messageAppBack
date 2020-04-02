@@ -13,25 +13,12 @@ const friendsTb = {
     )
     `)
   },
-  addFriend: async (userId, toId) => {
-    try {
-      const f_check = await query(`
-      select (
-      '${toId}' in (select friend_id
-        from friends where user_id = '${userId}'
-        ) 
-      ) isFriend
+  addFriend: (userId, toId) => {
+    return query(`
+    insert into friends(user_id, friend_id, pending, confirmed)
+    values('${userId}', '${toId}', null, false),
+    ('${toId}', '${userId}', false, false)
     `)
-      if (!f_check['rows']['isfriend']) {
-        return await query(`
-        insert into friends(user_id, friend_id, pending, confirmed)
-        values ('${userId}', '${toId}', null, false),
-        ('${toId}', '${userId}', true, false)
-        `)
-      }
-    } catch(err) {
-      console.log(err);
-    }
   },
   confirmFriend: (userId, toId) => {
     return query(`

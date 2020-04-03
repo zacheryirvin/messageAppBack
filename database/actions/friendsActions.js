@@ -3,21 +3,14 @@ const query = require('../query.js')
 const friendsTb = {
   getFriends: (userId) => {
     return query(`
-    select * from (
-      select distinct u.id, u.first_name, u.last_name, u.user_name, f.pending, f.confirmed 
-      from users u join friends f
-      on u.id = f.user_id
-    ) as a
-    where a.id in (select friend_id
-    from friends where user_id = '${userId}'
-    )
+      select * from all_friends('${userId}')
     `)
   },
-  addFriend: (userId, toId) => {
+  addFriend: async (userId, toId) => {
     return query(`
-    insert into friends(user_id, friend_id, pending, confirmed)
-    values('${userId}', '${toId}', null, false),
-    ('${toId}', '${userId}', false, false)
+    insert into friends(user_id, friend_id, pending, confirmed, requester)
+    values('${userId}', '${toId}', true, false, true),
+    ('${toId}', '${userId}', true, false, false)
     `)
   },
   confirmFriend: (userId, toId) => {

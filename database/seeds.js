@@ -24,9 +24,9 @@ const insertFriends = async () => {
     const userId = i[index]['id'];
     const toId = i[secIndex]['id'];
     const insertOne = await query(`
-      insert into friends(user_id, friend_id, pending, confirmed)
-      values('${userId}', '${toId}', false, true),
-      ('${toId}', '${userId}', false, true)
+      insert into friends(user_id, friend_id, pending, confirmed, requester)
+      values('${userId}', '${toId}', false, true, true),
+      ('${toId}', '${userId}', false, true, false)
     `)
   }
 }

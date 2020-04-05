@@ -1,5 +1,5 @@
-const query = require('../query.js');
-const friendsDb = require('./friendsActions.js');
+const query = require('../query.js').query;
+const messageQuery = require('../query.js').messageQuery;
 
 const messageTb = {
   getConversation: (userId, toId) => {
@@ -10,11 +10,12 @@ const messageTb = {
       order by time_stp desc
     `)
   },
-  addMessage: (userId, toId, message) => {
-    return query(`
+  addMessage: async (userId, toId, message) => {
+    const insert = await query(`
     insert into messages(from_id, to_id, message)
     values('${userId}', '${toId}', '${message}')
     `)
+    return insert;
   },
   friendCheck: (userId, toId) => {
     return query(`
@@ -29,6 +30,9 @@ const messageTb = {
     where from_id = '${userId}' and to_id = '${toId}'
     or from_id = '${toId}' and to_id = '${userId}'
     `)
+  },
+  listenConversation: () => {
+    return messageQuery();
   }
 };
 

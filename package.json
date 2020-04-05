@@ -21,7 +21,9 @@
     "express-session": "^1.17.0",
     "helmet": "^3.22.0",
     "pg": "^7.18.2",
-    "prettier": "^2.0.2"
+    "prettier": "^2.0.2",
+    "pusher": "^3.0.1",
+    "ws": "^7.2.3"
   },
   "devDependencies": {
     "faker": "^4.1.0",

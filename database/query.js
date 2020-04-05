@@ -1,3 +1,4 @@
+require('dotenv').config();
 const pool = require('./config.js')
 const Pusher = require('pusher');
 
@@ -18,10 +19,10 @@ const query = async (text, values) => {
 
 const messageQuery = async () => {
   const pusher = new Pusher({
-    appId: '976291',
-    key: '5033bb4cfc6d9a9ce2ea',
-    secret: 'de189c42289477c7806c',
-    cluster: 'us3',
+    appId: process.env.PH_APPID,
+    key: process.env.PH_KEY,
+    secret: process.env.PH_SECRET,
+    cluster: process.env.PH_CLUSTER,
   });
   const client = await pool.connect((err, client) => {
     if (err) {

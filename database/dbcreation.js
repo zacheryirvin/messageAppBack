@@ -27,6 +27,9 @@ const db = {
     const dropTrigger = await query(`
     drop trigger if exists watch_messages on messages
     `)
+    const dropSession = await query(`
+    drop table if exists session cascade
+    `)
     // console.log(friends)
   },
   createTables: async () => {
@@ -126,6 +129,20 @@ const db = {
       create trigger watch_messages
       after insert on messages
       for each row execute procedure notify_trigger();
+      `)
+      const create_session_table = await query(`
+      CREATE TABLE session (
+        "sid" varchar NOT NULL COLLATE "default",
+        "sess" json NOT NULL,
+        "expire" timestamp(6) NOT NULL
+      )
+      WITH (OIDS=FALSE);
+      `)
+      const alter_sessions_table = await query(`
+      ALTER TABLE session ADD CONSTRAINT "session_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE;
+      `)
+      const create_session_index = await query(`
+      CREATE INDEX IDX_session_expire ON session ("expire");
       `)
       console.log('messages', createMessages);
     } catch(err) {

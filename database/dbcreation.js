@@ -25,7 +25,7 @@ const db = {
     drop type if exists triggerMessage
     `)
     const dropTrigger = await query(`
-    drop trigger watch_messages on messages
+    drop trigger if exists watch_messages on messages
     `)
     // console.log(friends)
   },
@@ -62,6 +62,18 @@ const db = {
           from_id uuid references users(id) not null
         )
         `)
+      const user_friends = await query(`
+      create type user_friends as (
+      id uuid,
+      first_name text,
+      last_name text,
+      user_name text,
+      email text,
+      pending boolean,
+      confirmed boolean,
+      requester boolean
+      )
+      `)
       const all_friends = await query(`
       create or replace function all_friends(userId uuid)
       returns setof user_friends

@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const helm = require('helmet');
-const logger = require('morgan');
+// const logger = require('morgan');
 
 const server = express();
 

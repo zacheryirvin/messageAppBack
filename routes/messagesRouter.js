@@ -15,7 +15,7 @@ router.get('/:id',  async (req,res) => {
   }
 });
 
-router.get('/:id/feed', restrictedCheck, async (req, res) => {
+router.get('/:id/feed', async (req, res) => {
   try {
     const listen = messageDb.listenConversation();
     return res.status(200).json({Message: 'subscribe'})

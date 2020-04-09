@@ -151,6 +151,6 @@ const db = {
   },
 }
 
-db.uuid();
-db.dropTables();
+// db.uuid();
+// db.dropTables();
 db.createTables();

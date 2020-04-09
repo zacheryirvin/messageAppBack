@@ -3,7 +3,7 @@ const router = express.Router();
 const messageDb = require('../database/actions/messageActions.js');
 const restrictedCheck = require('./helpers/helpers.js').restricted
 
-router.get('/:id',  async (req,res) => {
+router.get('/:id', restrictedCheck, async (req,res) => {
   try {
     const toId = req.params.id
     const userId = req.session.user.id
@@ -15,7 +15,7 @@ router.get('/:id',  async (req,res) => {
   }
 });
 
-router.get('/:id/feed', async (req, res) => {
+router.get('/:id/feed', restrictedCheck, async (req, res) => {
   try {
     const listen = messageDb.listenConversation();
     return res.status(200).json({Message: 'subscribe'})

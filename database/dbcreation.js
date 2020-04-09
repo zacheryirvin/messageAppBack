@@ -151,6 +151,11 @@ const db = {
   },
 }
 
-// db.uuid();
-// db.dropTables();
-db.createTables();
+const anon = async () => {
+  const uuid = await db.uuid();
+  const drop = await db.dropTables();
+  const create = await db.createTables();
+}
+
+anon();
+

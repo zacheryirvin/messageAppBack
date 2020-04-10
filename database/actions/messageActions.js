@@ -8,6 +8,7 @@ const messageTb = {
       where from_id = '${userId}' and to_id = '${toId}' 
       or to_id = '${userId}' and from_id = '${toId}' 
       order by time_stp desc
+      limit 100
     `)
   },
   addMessage: async (userId, toId, message) => {

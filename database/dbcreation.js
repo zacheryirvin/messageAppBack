@@ -10,11 +10,9 @@ const db = {
     const users = await query(`
     drop table if exists users cascade 
     `)
-    // console.log(users)
     const messages = await query(`
     drop table if exists messages 
     `)
-    // console.log(messages)
     const friends = await query(`
     drop table if exists friends 
     `)
@@ -30,7 +28,7 @@ const db = {
     const dropSession = await query(`
     drop table if exists session cascade
     `)
-    // console.log(friends)
+     console.log(friends)
   },
   createTables: async () => {
     try {
@@ -157,5 +155,5 @@ const anon = async () => {
   const create = await db.createTables();
 }
 
-anon();
 
+anon();

@@ -1,8 +1,12 @@
-const express = require('express');
+const express = require('express')
 const router = express.Router();
-const messageDb = require('../database/actions/messageActions.js');
-const userDb = require('../database/actions/userActions.js');
-const restrictedCheck = require('./helpers/helpers.js').restricted
+const messageDb = require('../database/action/messageActions.js');
+const restrictedCheck = require('./helpers/helpers.js').restricted;
+import OpenAI from "openai"
+
+const openai = new OpenAI({
+	apiKey: process.env.OPENAI_API_KEY,
+});
 
 router.get('/:id', restrictedCheck, async (req,res) => {
   try {
@@ -27,12 +31,20 @@ router.get('/:id/feed', restrictedCheck, async (req, res) => {
 
 router.post('/', restrictedCheck, async (req, res) => {
   try {
-    const {toId, message} = req.body;
+    const {toId}= req.body;
+    const conversation= await messageDb.getConversation(userId, toId);
+    const message = await openai.chat.completion.create({
+      model: "gpt-4.1-mini",
+      messages: conversation,
+      temperature: 0.7,
+      max_tokens: 300,
+    });
+    const botReplyText = completion.choices[0]?.message?.content?.trim() || "Sorry, I had trouble responding. Please try again.";
+      
     const userId = req.session.user.id;
     const friendCheck = await messageDb.friendCheck(userId, toId);
     if (friendCheck['rows'][0]['isfriend'] === true) {
-        const sendMessage = await messageDb.addMessage(userId, toId, message);
-      }
+      const sendMessage = await messageDb.addMessage(userId, toId, botReplyText);
       return res.status(201).json("success");
     }
     return res.status(500).json("error");
@@ -41,15 +53,7 @@ router.post('/', restrictedCheck, async (req, res) => {
   }
 });
 
-router.delete('/', restrictedCheck, async (req, res) => {
-  try {
-    const {toId} = req.body;
-    const {userId} = req.session.user;
-    const deleteConversation = await messageDb.deleteConversation(userId, toId);
-    return res.status(204).json(deleteConversation);
-  }catch(err) {
-    console.log(err);
-  }
-});
 
 module.exports=router;
+
+

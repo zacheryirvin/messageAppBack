@@ -14,6 +14,11 @@ const usersTb = {
     where user_name = '${user_name}'
     `)
   },
+  getUserNameById: (id) => {
+    return query(`
+    select user_name from users
+    where id = '${id}'
+    `)
   deleteUser: (id) => {
     return query(`
     delete from users

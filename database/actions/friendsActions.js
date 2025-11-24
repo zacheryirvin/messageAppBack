@@ -36,6 +36,49 @@ const friendsTb = {
     or user_id = '${toId}' and friend_id = '${userId}'
     `);
   },
+  getFriendSuggestions: (userId, limit = 10) => {
+    const sql = `
+      WITH my_friends AS (
+        SELECT friend_id
+        FROM friends
+        WHERE user_id = $1 AND confirmed = true
+      ),
+      second_degree AS (
+        SELECT f.friend_id AS suggested_id
+        FROM friends f
+        JOIN my_friends mf ON f.user_id = mf.friend_id
+        WHERE f.confirmed = true
+      ),
+      mutual_counts AS (
+        SELECT suggested_id, COUNT(*) AS mutual_count
+        FROM second_degree
+        GROUP BY suggested_id
+      ),
+      excluded AS (
+        SELECT $1::uuid AS id
+        UNION
+        SELECT friend_id FROM friends WHERE user_id = $1
+        UNION
+        SELECT user_id FROM friends WHERE friend_id = $1
+      )
+      SELECT 
+        u.id,
+        u.first_name,
+        u.last_name,
+        u.user_name,
+        u.email,
+        mc.mutual_count
+      FROM mutual_counts mc
+      JOIN users u ON u.id = mc.suggested_id
+      WHERE mc.suggested_id NOT IN (SELECT id FROM excluded)
+      ORDER BY mc.mutual_count DESC, u.user_name ASC
+      LIMIT $2;
+    `;
+
+    const result = query(sql, [userId, limit]);
+    return result.rows;
+  }
+
 };
 
 module.exports = friendsTb;

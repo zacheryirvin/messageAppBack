@@ -51,4 +51,17 @@ router.delete("/", restrictedCheck, async (req, res) => {
   }
 });
 
+router.get("/suggestions", restrictedCheck, async (req, res) => {
+  try {
+    const id = req.session.user.id;
+    const limit = Number(req.query.limit || 10);
+
+    const suggestions = await friendsDb.getFriendSuggestions(id, limit);
+    return res.status(200).json(suggestions.rows);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json("error");
+  }
+});
+
 module.exports = router;

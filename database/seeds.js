@@ -1,71 +1,99 @@
-const query = require('./query.js').query;
-const faker = require('faker');
-const hashPassword = require('../database/helpers/bcryptHelpers.js').hashPassword;
+const { query } = require("./query.js");
+const faker = require("faker");
+const { hashPassword } = require("../database/helpers/bcryptHelpers.js");
 
 const insertUsers = async () => {
   for (let i = 0; i < 100; i++) {
-    const objectPass = {password: 'test'};
-    const hash = await hashPassword(objectPass)
-    const into = await query(`
-  insert into users(first_name, last_name, user_name, email, password)
-  values('${faker.name.firstName()}', '${faker.name.lastName()}', '${faker.internet.userName()}', '${faker.internet.email()}', '${hash}')
-  `)
-  } 
-}
+    const objectPass = { password: "test" };
+    const hash = await hashPassword(objectPass);
+
+    const firstName = faker.name.firstName();
+    const lastName = faker.name.lastName();
+    const userName = faker.internet.userName();
+    const email = faker.internet.email();
+
+    await query(
+      `
+      INSERT INTO users(first_name, last_name, user_name, email, password)
+      VALUES($1, $2, $3, $4, $5)
+      `,
+      [firstName, lastName, userName, email, hash]
+    );
+  }
+};
 
 const insertFriends = async () => {
-  let i = await query(`
-  select * from users
-  `)
-  i = i['rows']
-  for (let j = 0; j < i.length; j++) {
-    const index = Math.floor(Math.random() * (i.length - 1)) + 1;
-    const secIndex = Math.floor(Math.random() * (i.length - 1)) + 1;
-    const userId = i[index]['id'];
-    const toId = i[secIndex]['id'];
-    const insertOne = await query(`
-      insert into friends(user_id, friend_id, pending, confirmed, requester)
-      values('${userId}', '${toId}', false, true, true),
-      ('${toId}', '${userId}', false, true, false)
-    `)
+  const usersRes = await query(`SELECT id FROM users`);
+  const users = usersRes.rows;
+
+  for (let j = 0; j < users.length; j++) {
+    const index = Math.floor(Math.random() * users.length);
+    const secIndex = Math.floor(Math.random() * users.length);
+
+    if (index === secIndex) continue;
+
+    const userId = users[index].id;
+    const toId = users[secIndex].id;
+
+    await query(
+      `
+      INSERT INTO friends(user_id, friend_id, pending, confirmed, requester)
+      VALUES
+        ($1, $2, false, true, true),
+        ($2, $1, false, true, false)
+      ON CONFLICT (user_id, friend_id) DO NOTHING
+      `,
+      [userId, toId]
+    );
   }
-}
+};
 
 const insertMessages = async () => {
-  let i = await query(`
-  select * from users
-  `)
-  i = i['rows']
-  console.log(i)
-  for (let j = 0; j < 2000; j++) {
-    const index = Math.floor(Math.random() * (i.length - 1)) + 1;
-    const userId = i[index]['id'];
+  let usersRes = await query(`SELECT * FROM users`);
+  const users = usersRes.rows;
 
-    let friends = await query(`
-    select friend_id from friends
-    where user_id = '${userId}'
-    `) 
-    friends = friends['rows'];
-    // console.log(friends)
+  for (let j = 0; j < 2000; j++) {
+    const index = Math.floor(Math.random() * users.length);
+    const userId = users[index].id;
+
+    let friendsRes = await query(
+      `
+      SELECT friend_id FROM friends
+      WHERE user_id = $1
+      `,
+      [userId]
+    );
+
+    const friends = friendsRes.rows;
+
     if (friends.length > 0) {
-      const f_index = Math.floor(Math.random() * (friends.length - 0)) + 0;
-      // console.log(friends)
-      // console.log(f_index)
-      const randomFriend = friends[f_index]['friend_id']
-      const message = faker.lorem.sentences();
-      const sendMessage = await query(`
-    insert into messages(message, to_id, from_id)
-    values('${message}', '${randomFriend}', '${userId}')
-    `)
+      const fIndex = Math.floor(Math.random() * friends.length);
+      const randomFriend = friends[fIndex].friend_id;
+      let message = faker.lorem.sentences();
+      if(message.length > 250) {
+	message = message.slice(0, 250);
+      }
+
+      await query(
+        `
+        INSERT INTO messages(message, to_id, from_id)
+        VALUES($1, $2, $3)
+        `,
+        [message, randomFriend, userId]
+      );
     }
   }
-}
-
+};
 
 const runAll = async () => {
-  await insertUsers();
-  await insertFriends();
-  await insertMessages();
-} 
+  try {
+    await insertUsers();
+    await insertFriends();
+    await insertMessages();
+    console.log("✅ Seeding complete");
+  } catch (err) {
+    console.error("❌ Seeding failed:", err);
+  }
+};
 
 runAll();

@@ -1,159 +1,195 @@
-const query = require('./query.js').query;
+require("dotenv").config();
+const pool = require("./config.js");
 
 const db = {
-  uuid: () => {
-    return query(`
-    create extension if not exists "uuid-ossp"
-    `)
+  uuid: async () => {
+    await pool.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
   },
-  dropTables: async () => {
-    const users = await query(`
-    drop table if exists users cascade 
-    `)
-    const messages = await query(`
-    drop table if exists messages 
-    `)
-    const friends = await query(`
-    drop table if exists friends 
-    `)
-    const type = await query(`
-    drop type if exists user_friends cascade
-    `)
-    const triggerMessage = await query(`
-    drop type if exists triggerMessage
-    `)
-    const dropTrigger = await query(`
-    drop trigger if exists watch_messages on messages
-    `)
-    const dropSession = await query(`
-    drop table if exists session cascade
-    `)
-     console.log(friends)
-  },
-  createTables: async () => {
-    try {
-      const createUsers = await query(`
-      create table if not exists users(
-        id uuid default uuid_generate_v4() primary key,
-        first_name varchar(100) default null,
-        last_name varchar(100) default null,
-        user_name varchar(100) not null unique,
-        email varchar(100) not null unique,
-        password varchar(250) not null unique
-      )
-    `)
-      console.log('users', createUsers);
-      const createFriends = await query(`
-        create table if not exists friends(
-          user_id uuid references users(id) not null,
-          friend_id uuid references users(id) not null,
-          pending boolean not null default true,
-          confirmed boolean not null default false,
-          requester boolean not null,
-          primary key(user_id, friend_id)
-        )
-        `)
-      console.log('friends', createFriends);
-      const createMessages = await query(`
-        create table if not exists messages(
-          id uuid default uuid_generate_v4() primary key,
-          time_stp timestamp default current_timestamp,
-          message varchar(250),
-          to_id uuid references users(id) not null,
-          from_id uuid references users(id) not null
-        )
-        `)
-      const user_friends = await query(`
-      create type user_friends as (
-      id uuid,
-      first_name text,
-      last_name text,
-      user_name text,
-      email text,
-      pending boolean,
-      confirmed boolean,
-      requester boolean
-      )
-      `)
-      const all_friends = await query(`
-      create or replace function all_friends(userId uuid)
-      returns setof user_friends
-      language plpgsql as $$
-      declare 
-      tempy cursor for 
-        select friend_id, pending, confirmed, requester
-        from friends
-        where user_id = userId;
-      return_val user_friends;
-      begin 
-        for i in tempy
-        loop
-          select id, first_name, last_name, user_name, email, i.pending, i.confirmed, i.requester
-          into return_val
-          from users 
-          where id = i.friend_id;
-          return next return_val;
-        end loop;
-      end; $$;
-      `)
-      const triggerMessage = await query(`
-      create type triggerMessage as (
-        id uuid,
-        from_id uuid,
-        to_id uuid,
-        time_stp text,
-        message text
-      )
-      `)
-      const trigger_function = await query(`
-      create or replace function notify_trigger()
-      returns trigger
-      as $$
-      declare
-      tempy triggerMessage;
-      begin 
 
-        tempy.id := new.id;
-        tempy.from_id := new.from_id;
-        tempy.to_id := new.to_id;
-        tempy.time_stp := to_char(new.time_stp, 'mm-dd-yy, hh24:mi:ss');
-        tempy.message := new.message;
-        perform pg_notify('watch_messages', row_to_json(tempy)::text);
-      --	new.time_stp := to_char(new.time_stp, 'mm-dd-yy, hh24::mi:ss');
-        return new;
-      end; $$ language plpgsql;
-      `)
-      const create_trigger = await query(`
-      create trigger watch_messages
-      after insert on messages
-      for each row execute procedure notify_trigger();
-      `)
-      const create_session_table = await query(`
-      CREATE TABLE session (
+  dropTables: async () => {
+    // Drop trigger only if messages table exists
+    await pool.query(`
+      DO $$
+      BEGIN
+        IF EXISTS (SELECT 1 FROM pg_class WHERE relname = 'messages') THEN
+          DROP TRIGGER IF EXISTS watch_messages ON messages;
+        END IF;
+      END $$;
+    `);
+
+    // Drop tables
+    await pool.query(`DROP TABLE IF EXISTS friends CASCADE`);
+    await pool.query(`DROP TABLE IF EXISTS messages CASCADE`);
+    await pool.query(`DROP TABLE IF EXISTS users CASCADE`);
+    await pool.query(`DROP TABLE IF EXISTS session CASCADE`);
+
+    // Drop functions
+    await pool.query(`DROP FUNCTION IF EXISTS all_friends(uuid) CASCADE`);
+    await pool.query(`DROP FUNCTION IF EXISTS notify_trigger() CASCADE`);
+
+    // Drop types
+    await pool.query(`DROP TYPE IF EXISTS user_friends CASCADE`);
+    await pool.query(`DROP TYPE IF EXISTS triggerMessage CASCADE`);
+  },
+
+  createTables: async () => {
+    // USERS
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users(
+        id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+        first_name varchar(100) DEFAULT NULL,
+        last_name varchar(100) DEFAULT NULL,
+        user_name varchar(100) NOT NULL UNIQUE,
+        email varchar(100) NOT NULL UNIQUE,
+        password varchar(250) NOT NULL
+      )
+    `);
+
+    // FRIENDS
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS friends(
+        user_id uuid REFERENCES users(id) NOT NULL,
+        friend_id uuid REFERENCES users(id) NOT NULL,
+        pending boolean NOT NULL DEFAULT true,
+        confirmed boolean NOT NULL DEFAULT false,
+        requester boolean NOT NULL,
+        PRIMARY KEY(user_id, friend_id)
+      )
+    `);
+
+    // MESSAGES
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS messages(
+        id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+        time_stp timestamp DEFAULT current_timestamp,
+        message varchar(250),
+        to_id uuid REFERENCES users(id) NOT NULL,
+        from_id uuid REFERENCES users(id) NOT NULL
+      )
+    `);
+
+    // TYPE: user_friends (guard duplicate)
+    await pool.query(`
+      DO $$
+      BEGIN
+        CREATE TYPE user_friends AS (
+          id uuid,
+          first_name text,
+          last_name text,
+          user_name text,
+          email text,
+          pending boolean,
+          confirmed boolean,
+          requester boolean
+        );
+      EXCEPTION WHEN duplicate_object THEN NULL;
+      END $$;
+    `);
+
+    // FUNCTION: all_friends
+    await pool.query(`
+      CREATE OR REPLACE FUNCTION all_friends(userId uuid)
+      RETURNS SETOF user_friends
+      LANGUAGE plpgsql AS $$
+      DECLARE
+        tempy CURSOR FOR
+          SELECT friend_id, pending, confirmed, requester
+          FROM friends
+          WHERE user_id = userId;
+        return_val user_friends;
+      BEGIN
+        FOR i IN tempy LOOP
+          SELECT id, first_name, last_name, user_name, email,
+                 i.pending, i.confirmed, i.requester
+          INTO return_val
+          FROM users
+          WHERE id = i.friend_id;
+
+          RETURN NEXT return_val;
+        END LOOP;
+        RETURN;
+      END; $$;
+    `);
+
+    // TYPE: triggerMessage (guard duplicate)
+    await pool.query(`
+      DO $$
+      BEGIN
+        CREATE TYPE triggerMessage AS (
+          id uuid,
+          from_id uuid,
+          to_id uuid,
+          time_stp text,
+          message text
+        );
+      EXCEPTION WHEN duplicate_object THEN NULL;
+      END $$;
+    `);
+
+    // FUNCTION: notify_trigger
+    await pool.query(`
+      CREATE OR REPLACE FUNCTION notify_trigger()
+      RETURNS trigger AS $$
+      DECLARE
+        tempy triggerMessage;
+      BEGIN
+        tempy.id := NEW.id;
+        tempy.from_id := NEW.from_id;
+        tempy.to_id := NEW.to_id;
+        tempy.time_stp := to_char(NEW.time_stp, 'mm-dd-yy, hh24:mi:ss');
+        tempy.message := NEW.message;
+
+        PERFORM pg_notify('watch_messages', row_to_json(tempy)::text);
+        RETURN NEW;
+      END; $$ LANGUAGE plpgsql;
+    `);
+
+    // TRIGGER: watch_messages
+    await pool.query(`
+      DROP TRIGGER IF EXISTS watch_messages ON messages;
+
+      CREATE TRIGGER watch_messages
+      AFTER INSERT ON messages
+      FOR EACH ROW
+      EXECUTE FUNCTION notify_trigger();
+    `);
+
+    // SESSION TABLE (idempotent)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS session (
         "sid" varchar NOT NULL COLLATE "default",
         "sess" json NOT NULL,
-        "expire" timestamp(6) NOT NULL
+        "expire" timestamp(6) NOT NULL,
+        PRIMARY KEY ("sid")
       )
-      WITH (OIDS=FALSE);
-      `)
-      const alter_sessions_table = await query(`
-      ALTER TABLE session ADD CONSTRAINT "session_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE;
-      `)
-      const create_session_index = await query(`
-      CREATE INDEX IDX_session_expire ON session ("expire");
-      `)
-      console.log('messages', createMessages);
-    } catch(err) {
-      console.log(err);
-    }
+    `);
+
+    // SESSION INDEX (idempotent)
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS IDX_session_expire ON session ("expire");
+    `);
+
+    console.log("✅ Tables/types/functions/triggers created.");
   },
-}
+};
 
-const anon = async () => {
-  const uuid = await db.uuid();
-  const drop = await db.dropTables();
-  const create = await db.createTables();
-}
+(async () => {
+  try {
+    console.log("Starting dbcreation...");
 
+    const dbNameRes = await pool.query("SELECT current_database()");
+    console.log("SCRIPT IS CONNECTED TO DB:", dbNameRes.rows[0].current_database);
 
-anon();
+    await db.uuid();
+    await db.dropTables();
+    await db.createTables();
+
+    console.log("✅ dbcreation complete.");
+  } catch (err) {
+    console.error("❌ dbcreation failed:", err.message);
+    console.error(err);
+  } finally {
+    await pool.end();
+    console.log("Pool closed.");
+  }
+})();

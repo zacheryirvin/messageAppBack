@@ -34,7 +34,6 @@ router.post('/', restrictedCheck, async (req, res) => {
         const sendMessage = await messageDb.addMessage(userId, toId, message);
       }
       return res.status(201).json("success");
-    }
     return res.status(500).json("error");
   } catch(err) {
     console.log(err);
@@ -47,7 +46,7 @@ router.delete('/', restrictedCheck, async (req, res) => {
     const {userId} = req.session.user;
     const deleteConversation = await messageDb.deleteConversation(userId, toId);
     return res.status(204).json(deleteConversation);
-  }catch(err) {
+  } catch(err) {
     console.log(err);
   }
 });

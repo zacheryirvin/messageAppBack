@@ -16,12 +16,14 @@ router.post("/register", async (req, res) => {
       newUser.password = hash;
       const user = await usersDb.addUser(newUser);
       const user_data = await usersDb.getUser(newUser.user_name);
-      console.log(user_data.rows[0].id)
+      //console.log(user_data.rows[0].id)
       const bot_data = await usersDb.getUser('chatbot');
-      console.log(bot_data.rows[0].id)
+      //console.log(bot_data.rows[0].id)
       const add = await friendsDb.addFriend(bot_data.rows[0].id, user_data.rows[0].id);
       const confirm = await friendsDb.confirmFriend(user_data.rows[0].id, bot_data.rows[0].id);
       res.status(201).json(user);
+      //console.log(add)
+      //console.log(confirm)
     } catch (err) {
       res.status(500).json(err);
     }

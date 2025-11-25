@@ -27,16 +27,19 @@ router.get('/:id/feed', restrictedCheck, async (req, res) => {
 
 router.post('/', restrictedCheck, async (req, res) => {
   try {
+    console.log("in post");
     const {toId, message} = req.body;
     const userId = req.session.user.id;
     const friendCheck = await messageDb.friendCheck(userId, toId);
     if (friendCheck['rows'][0]['isfriend'] === true) {
         const sendMessage = await messageDb.addMessage(userId, toId, message);
+	console.log(message)
+        return res.status(201).json("success");
       }
-      return res.status(201).json("success");
     return res.status(500).json("error");
   } catch(err) {
     console.log(err);
+    return res.status(500).json("error");
   }
 });
 

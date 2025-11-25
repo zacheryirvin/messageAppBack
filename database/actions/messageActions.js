@@ -16,7 +16,7 @@ const messageTb = {
     insert into messages(from_id, to_id, message)
     values('${userId}', '${toId}', '${message}')
     `);
-    console.log(insert);
+    //console.log(insert);
     return insert;
   },
   friendCheck: (userId, toId) => {

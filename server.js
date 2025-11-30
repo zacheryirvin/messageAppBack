@@ -31,6 +31,7 @@ const {
   friendsRouter,
   messagesRouter,
   usersRouter,
+  adminRouter,
 } = require("./routes/index.js");
 
 server.use(theSession);
@@ -47,6 +48,20 @@ const middle = async (req, res, next) => {
   );
   next();
 };
+
+(async () => {
+  try {
+    await connectMongo();
+    const mgdb_port = process.env.MGDB_PORT || 5000;
+    server.listen(mgdb_port, () => {
+      console.log(`Listening on Port ${mgdb_port}`)
+    });
+  } catch (err) {
+    console.log("Failed to Start Mongo Server");
+    process.exit(1);
+  }
+})();
+
 // server.use( (req, res, next) => {
 // res.header('Access-Control-Allow-Credentials', true);
 // res.header('Access-Control-Allow-Origin', req.headers.origin);
@@ -60,6 +75,8 @@ server.use(express.json());
 server.use("/friends", friendsRouter);
 server.use("/messages", messagesRouter);
 server.use("/users", middle, usersRouter);
+server.use("/admin", adminRouter);
+
 
 server.get("/", (req, res) => {
   res.send("Test of Server Running");

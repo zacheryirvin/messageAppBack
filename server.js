@@ -26,6 +26,7 @@ const sessionOptions = {
 };
 
 const theSession = session(sessionOptions);
+const connectMongo = require("./database/mongo.js");
 
 const {
   friendsRouter,
@@ -57,7 +58,7 @@ const middle = async (req, res, next) => {
       console.log(`Listening on Port ${mgdb_port}`)
     });
   } catch (err) {
-    console.log("Failed to Start Mongo Server");
+    console.log("Failed to Start Mongo Server", err);
     process.exit(1);
   }
 })();

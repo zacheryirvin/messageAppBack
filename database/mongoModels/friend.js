@@ -50,4 +50,4 @@ friendSchema.index(
   { unique: true }
 );
 
-module.exports = mongoose.model('MongoFriend', friendSchema);
+module.exports = mongoose.models.MongoFriend || mongoose.model("MongoFriend", friendSchema);

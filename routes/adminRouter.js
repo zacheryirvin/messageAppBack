@@ -4,16 +4,16 @@ const router = express.Router();
 
 const restrictedCheck = require("./helpers/helpers.js").restricted;
 
-const MongoUser = require("../database/mongoModels/User");
-const MongoMessage = require("../database/mongoModels/Message");
-const MongoFriend = require("../database/mongoModels/Friend");
+const MongoUser = require("../database/mongoModels/user");
+const MongoMessage = require("../database/mongoModels/message");
+const MongoFriend = require("../database/mongoModels/friend");
 
 // 🔹 Optional: extra guard so only "admin" users access this
 // Adapt this to match however you store roles in req.session.user
 function requireAdmin(req, res, next) {
   const user = req.session.user;
   // Example: if you add a boolean isAdmin or role field on the user session
-  if (!user || (!user.isAdmin && user.role !== "admin")) {
+  if (!user.is_admin) {
     return res.status(403).json({ error: "Forbidden: admin only" });
   }
   next();
@@ -190,4 +190,45 @@ router.get("/recent-users", async (req, res) => {
  *
  * Returns list of recent messages with sender/receiver username if available.
  */
+
+router.get("/friend-status", async (req, res) => {
+  try {
+    const [confirmed, pending] = await Promise.all([
+      MongoFriend.countDocuments({ confirmed: true }),
+      MongoFriend.countDocuments({ pending: true, confirmed: false }),
+    ]);
+
+    res.json([
+      { name: "Confirmed", value: confirmed },
+      { name: "Pending", value: pending },
+    ]);
+  } catch (err) {
+    console.error("Admin /friend-status error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.get("/messages-per-hour", async (req, res) => {
+  try {
+    const hours = parseInt(req.query.hours || "24", 10);
+    const since = new Date(Date.now() - hours * 60 * 60 * 1000);
+
+    const result = await MongoMessage.aggregate([
+      { $match: { time_stp: { $gte: since } } },
+      { $group: { _id: { $hour: "$time_stp" }, count: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+
+    // Ensure 0–23 are present
+    const byHour = Array.from({ length: 24 }, (_, h) => ({ hour: h, count: 0 }));
+    for (const r of result) byHour[r._id].count = r.count;
+
+    res.json(byHour);
+  } catch (err) {
+    console.error("Admin /messages-per-hour error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
 module.exports = router;

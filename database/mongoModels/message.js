@@ -50,4 +50,4 @@ const messageSchema = new Schema(
 // helpful for time-range queries
 messageSchema.index({ time_stp: 1 });
 
-module.exports = mongoose.model('MongoMessage', messageSchema);
+module.exports = mongoose.models.MongoMessage || mongoose.model('MongoMessage', messageSchema);

@@ -2,6 +2,27 @@ const { query } = require("./query.js");
 const faker = require("faker");
 const { hashPassword } = require("../database/helpers/bcryptHelpers.js");
 
+
+const seedAdminUser = async () => {
+  const objectPass = { password: "test" };
+  const hash = await hashPassword(objectPass);
+
+  await query(`
+    INSERT INTO users (first_name, last_name, user_name, email, password, is_admin)
+    VALUES ($1, $2, $3, $4, $5, true)
+    ON CONFLICT (user_name) DO NOTHING
+  `, [
+    "Admin",
+    "User",
+    "admin",
+    "admin@test.com",
+    hash
+  ]);
+
+  console.log("✅ Admin user seeded (username: admin / password: admin123)");
+}
+
+
 const insertUsers = async () => {
   for (let i = 0; i < 100; i++) {
     const objectPass = { password: "test" };
@@ -87,6 +108,7 @@ const insertMessages = async () => {
 
 const runAll = async () => {
   try {
+    await seedAdminUser()
     await insertUsers();
     await insertFriends();
     await insertMessages();

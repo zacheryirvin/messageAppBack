@@ -12,18 +12,32 @@ const restricted = async (req, res, next) => {
 
 const login = async (req, res, next) => {
   const { user_name, password } = req.body;
+
   try {
-    let user = await usersDb.getUser(user_name);
-    if (user && bcrypt.compareSync(password, user["rows"][0].password)) {
-      req.session.user = user["rows"][0];
-      next();
-    } else {
-      res.status(401).json({ Error: "Please Signup" });
+    const result = await usersDb.getUser(user_name);
+
+    if (result?.rows?.length && bcrypt.compareSync(password, result.rows[0].password)) {
+      const u = result.rows[0];
+
+      // ✅ store only what you need (no password)
+      req.session.user = {
+        id: u.id,
+        user_name: u.user_name,
+        email: u.email,
+        first_name: u.first_name,
+        last_name: u.last_name,
+        is_admin: u.is_admin === true, // <-- THIS enables admin access
+      };
+
+      return next();
     }
+
+    return res.status(401).json({ Error: "Please Signup" });
   } catch (err) {
-    res.status(500).json(err);
+    return res.status(500).json(err);
   }
 };
+
 
 module.exports = {
   restricted,

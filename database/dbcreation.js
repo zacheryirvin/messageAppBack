@@ -41,7 +41,8 @@ const db = {
         last_name varchar(100) DEFAULT NULL,
         user_name varchar(100) NOT NULL UNIQUE,
         email varchar(100) NOT NULL UNIQUE,
-        password varchar(250) NOT NULL
+        password varchar(250) NOT NULL,
+        is_admin boolean NOT NULL DEFAULT false
       )
     `);
 

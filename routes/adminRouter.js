@@ -4,9 +4,9 @@ const router = express.Router();
 
 const restrictedCheck = require("./helpers/helpers.js").restricted;
 
-const MongoUser = require("../mongoModels/User");
-const MongoMessage = require("../mongoModels/Message");
-const MongoFriend = require("../mongoModels/Friend");
+const MongoUser = require("../database/mongoModels/User");
+const MongoMessage = require("../database/mongoModels/Message");
+const MongoFriend = require("../database/mongoModels/Friend");
 
 // 🔹 Optional: extra guard so only "admin" users access this
 // Adapt this to match however you store roles in req.session.user

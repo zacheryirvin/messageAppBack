@@ -9,7 +9,7 @@ const login = require("./helpers/helpers.js").login;
 const restrictedCheck = require("./helpers/helpers.js").restricted;
 
 // 🔹 NEW: Mongo analytics model
-const MongoUser = require("../mongoModels/User");
+const MongoUser = require("../database/mongoModels/User");
 
 // POST /users/register
 router.post("/register", async (req, res) => {

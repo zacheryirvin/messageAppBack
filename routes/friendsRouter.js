@@ -4,7 +4,7 @@ const friendsDb = require("../database/actions/friendsActions.js");
 const restrictedCheck = require("./helpers/helpers.js").restricted;
 
 // 🔹 NEW: Mongo analytics model
-const MongoFriend = require("../mongoModels/Friend");
+const MongoFriend = require("../database/mongoModels/friend.js");
 
 // GET /friends  – list current user's friends (PG only)
 router.get("/", restrictedCheck, async (req, res) => {

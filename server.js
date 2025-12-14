@@ -4,6 +4,7 @@ const helm = require("helmet");
 // const logger = require('morgan');
 
 const server = express();
+server.set("trust proxy", 1);
 
 const restrictedCheck = require("./routes/helpers/helpers.js").restricted;
 
@@ -15,13 +16,16 @@ const sessionOptions = {
     pool: pool,
   }),
   name: "messageAppSession",
-  secret: "akioannbkd35418dadfak5478632dadf5ekke5973kjf",
+  //secret: "akioannbkd35418dadfak5478632dadf5ekke5973kjf",
+  secret: process.env.SESSION_SECRET,
   cookie: {
     maxAge: 1000 * 60 * 60,
-    httpOnly: false,
+    httpOnly: true,
+    secure: process.env.NODE_ENV == "production",
+    sameSite: process.env.NODE_ENV = "production" ? "none" : "lax",
   },
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: false,
   key: "express.sid",
 };
 
@@ -50,18 +54,18 @@ const middle = async (req, res, next) => {
   next();
 };
 
-(async () => {
-  try {
-    await connectMongo();
-    const mgdb_port = process.env.MGDB_PORT || 5000;
-    server.listen(mgdb_port, () => {
-      console.log(`Listening on Port ${mgdb_port}`)
-    });
-  } catch (err) {
-    console.log("Failed to Start Mongo Server", err);
-    process.exit(1);
-  }
-})();
+//(async () => {
+  //try {
+    //await connectMongo();
+    //const mgdb_port = process.env.MGDB_PORT || 5000;
+    //server.listen(mgdb_port, () => {
+      //console.log(`Listening on Port ${mgdb_port}`)
+    //});
+  //} catch (err) {
+    //console.log("Failed to Start Mongo Server", err);
+    //process.exit(1);
+  //}
+//})();
 
 // server.use( (req, res, next) => {
 // res.header('Access-Control-Allow-Credentials', true);

@@ -8,7 +8,9 @@
     "start": "node index.js",
     "server": "nodemon index.js",
     "seed": "node ./database/seeds.js",
-    "dbcreate": "node ./database/dbcreation.js"
+    "dbcreate": "node ./database/dbcreation.js",
+    "dbseed": "node ./database/seeds.js",
+    "dbsync": "node ./syncMongo.js"
   },
   "author": "badCompany110",
   "license": "ISC",
@@ -25,11 +27,6 @@
     "pg": "^8.16.3",
     "pusher": "^3.0.1",
     "ws": "^8.18.3"
-  },
-  "scripts": {
-    "db:create":"./database/dbcreation.js",
-    "db:seed":"./database/seeds.js",
-    "db:sync":"./database/syncMongo.js"
   },
   "devDependencies": {
     "faker": "^4.1.0",

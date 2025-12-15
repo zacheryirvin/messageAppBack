@@ -24,6 +24,7 @@ const messageQuery = async () => {
     key: process.env.PH_KEY,
     secret: process.env.PH_SECRET,
     cluster: process.env.PH_CLUSTER,
+    useTLS: true
   });
   const client = await pool.connect((err, client) => {
     if (err) {

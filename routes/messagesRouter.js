@@ -75,47 +75,8 @@ router.post('/', restrictedCheck, async (req, res) => {
       to_pg_id: toId,
     });
 
-    const botId = await getBotId();
 
     // If messaging the bot, generate and insert bot reply
-    if (String(toId) === String(botId)) {
-      const convoRes = await messageDb.getConversation(userId, botId);
-      const convo = (convoRes.rows || []).reverse();
-
-      const messagesForAI = convo.slice(-20).map(m => ({
-        role: String(m.from_id) === String(userId) ? "user" : "assistant",
-        content: m.message
-      }));
-
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content:
-              "You are the in-app chatbot friend inside a messaging app. Be helpful, concise, and friendly."
-          },
-          ...messagesForAI
-        ],
-        temperature: 0.6
-      });
-
-      let botReply = completion.choices?.[0]?.message?.content ?? "";
-      if (botReply.length > 250) botReply = botReply.slice(0, 250);
-
-      const botInsert = await messageDb.addMessage(botId, userId, botReply);
-      const botPg = botInsert.rows[0];
-
-      await MongoMessage.create({
-        pgId: botPg.id,
-        time_stp: botPg.time_stp,
-        message: botPg.message,
-        from_pg_id: botId,
-        to_pg_id: userId,
-      });
-
-      return res.status(201).json({ status: "success", botReply });
-    }
 
     // Normal (non-bot) message
     return res.status(201).json({ status: "success" });

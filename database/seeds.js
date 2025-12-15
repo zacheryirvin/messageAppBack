@@ -106,10 +106,47 @@ const insertMessages = async () => {
   }
 };
 
+const seedChatbotUser = async () => {
+  const objectPass = { password: "chatbot" };
+  const hash = await hashPassword(objectPass);
+
+  await query(
+    `
+    INSERT INTO users (first_name, last_name, user_name, email, password)
+    VALUES ($1, $2, $3, $4, $5)
+    ON CONFLICT (user_name) DO NOTHING
+    `,
+    ["Chat", "Bot", "chatbot", "chatbot@messageapp.local", hash]
+  );
+
+  // make chatbot friends with all users (confirmed)
+  await query(`
+    WITH bot AS (SELECT id FROM users WHERE user_name='chatbot')
+    INSERT INTO friends(user_id, friend_id, pending, confirmed, requester)
+    SELECT u.id, bot.id, false, true, true
+    FROM users u, bot
+    WHERE u.id <> bot.id
+    ON CONFLICT (user_id, friend_id) DO NOTHING
+  `);
+
+  await query(`
+    WITH bot AS (SELECT id FROM users WHERE user_name='chatbot')
+    INSERT INTO friends(user_id, friend_id, pending, confirmed, requester)
+    SELECT bot.id, u.id, false, true, false
+    FROM users u, bot
+    WHERE u.id <> bot.id
+    ON CONFLICT (user_id, friend_id) DO NOTHING
+  `);
+
+  console.log("✅ Chatbot user seeded + friended");
+};
+
+
 const runAll = async () => {
   try {
     await seedAdminUser()
     await insertUsers();
+    await seedChatbotUser();
     await insertFriends();
     await insertMessages();
     console.log("✅ Seeding complete");

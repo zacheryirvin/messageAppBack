@@ -3,6 +3,23 @@ const router = express.Router();
 const messageDb = require('../database/actions/messageActions.js');
 const userDb = require('../database/actions/userActions.js'); // currently unused but fine
 const restrictedCheck = require('./helpers/helpers.js').restricted;
+const usersDb = require('../database/actions/userActions.js');
+const OpenAI = require("openai");
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+let BOT_ID_CACHE = null;
+
+async function getBotId() {
+  if (BOT_ID_CACHE) return BOT_ID_CACHE;
+  const botName = process.env.BOT_USERNAME || "chatbot";
+  const res = await usersDb.getUser(botName);
+  const bot = res.rows[0];
+  if (!bot) throw new Error(`Bot user '${botName}' not found`);
+  BOT_ID_CACHE = bot.id;
+  return BOT_ID_CACHE;
+}
+
 
 // 🔹 NEW: Mongo analytics model
 const MongoMessage = require('../database/mongoModels/message');
@@ -35,7 +52,7 @@ router.get('/:id/feed', restrictedCheck, async (req, res) => {
 // POST /messages  (send a new message)
 router.post('/', restrictedCheck, async (req, res) => {
   try {
-    console.log('in post');
+    //console.log('in post');
     const { toId, message } = req.body;
     const userId = req.session.user.id;
 
@@ -70,8 +87,48 @@ router.post('/', restrictedCheck, async (req, res) => {
         from_pg_id: userId,
         to_pg_id: toId,
       });
+      
+      const botId = await getBotId();
 
-      console.log(message);
+      if (String(toId) === String(botId)) {
+  // Pull recent conversation for context (last 20)
+        const convoRes = await messageDb.getConversation(userId, botId);
+        const convo = (convoRes.rows || []).reverse(); // chronological
+
+        const messagesForAI = convo.slice(-20).map(m => ({
+          role: String(m.from_id) === String(userId) ? "user" : "assistant",
+          content: m.message
+        }));
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are the in-app chatbot friend inside a messaging app. Be helpful, concise, and friendly."
+          },
+          ...messagesForAI
+       ],
+       temperature: 0.6
+    });
+
+    let botReply = completion.choices?.[0]?.message?.content ?? "";
+    if (botReply.length > 250) botReply = botReply.slice(0, 250); // fits DB schema
+
+    const botInsert = await messageDb.addMessage(botId, userId, botReply);
+    const botPg = botInsert.rows[0];
+
+  // Mirror bot message into Mongo too
+    await MongoMessage.create({
+      pgId: botPg.id,
+      time_stp: botPg.time_stp,
+      message: botPg.message,
+      from_pg_id: botId,
+      to_pg_id: userId,
+    });
+
+    //  console.log(message);
       return res.status(201).json('success');
     }
 

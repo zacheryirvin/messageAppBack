@@ -11,13 +11,15 @@ const messageTb = {
       limit 100
     `);
   },
-  addMessage: async (userId, toId, message) => {
-    const insert = await query(`
-    insert into messages(from_id, to_id, message)
-    values('${userId}', '${toId}', '${message}')
-    `);
-    //console.log(insert);
-    return insert;
+  addMessage: (userId, toId, message) => {
+    return query(
+    `
+    INSERT INTO messages(from_id, to_id, message)
+    VALUES($1, $2, $3)
+    RETURNING id, time_stp, message, to_id, from_id
+    `,
+    [userId, toId, message]
+    );
   },
   friendCheck: (userId, toId) => {
     return query(`

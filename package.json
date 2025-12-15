@@ -26,6 +26,11 @@
     "pusher": "^3.0.1",
     "ws": "^8.18.3"
   },
+  "scripts": {
+    "db:create":"./database/dbcreation.js",
+    "db:seed":"./database/seeds.js",
+    "db:sync":"./database/syncMongo.js"
+  },
   "devDependencies": {
     "faker": "^4.1.0",
     "morgan": "^1.10.0",

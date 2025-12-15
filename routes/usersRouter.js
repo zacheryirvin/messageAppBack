@@ -7,12 +7,7 @@ const hashPassword =
   require("../database/helpers/bcryptHelpers.js").hashPassword;
 const login = require("./helpers/helpers.js").login;
 const restrictedCheck = require("./helpers/helpers.js").restricted;
-const bot_data = await usersDb.getUser(process.env.BOT_USERNAME || "chatbot");
-const botUser = bot_data.rows[0];
 
-if (!botUser) {
-  return res.status(500).json({error: "Chotbot not found"});
-}
 
 await friendsDb.addFriend(pgUser.id, botUser.id);
 await friendsDb.confirmFriend(pgUser.id, botUser.id);
@@ -55,8 +50,13 @@ router.post("/register", async (req, res) => {
       );
 
       // get chatbot user from Postgres (already in your code)
-      const bot_data = await usersDb.getUser("chatbot");
+      const bot_data = await usersDb.getUser(process.env.BOT_USERNAME || "chatbot");
       const botUser = bot_data.rows[0];
+      if (!botUser) {
+        return res.status(500).json({error: "Chotbot not found"});
+      }
+      await friendsDb.addFriend(pgUser.id, botUser.id);
+      await friendsDb.confirmFriend(pgUser.id, botUser.id);
 
       // 🔹 Optional: mirror chatbot into Mongo as well
       if (botUser) {

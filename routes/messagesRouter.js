@@ -5,7 +5,7 @@ const userDb = require('../database/actions/userActions.js'); // currently unuse
 const restrictedCheck = require('./helpers/helpers.js').restricted;
 
 // 🔹 NEW: Mongo analytics model
-const MongoMessage = require('../database/mongoModels/Message');
+const MongoMessage = require('../database/mongoModels/message');
 
 // GET /messages/:id  (get conversation with user :id)
 router.get('/:id', restrictedCheck, async (req, res) => {

@@ -12,7 +12,6 @@ const query = async (text, values) => {
   }
 };
 
-let listenClient = null;
 
 const messageQuery = async () => {
   const pusher = new Pusher({

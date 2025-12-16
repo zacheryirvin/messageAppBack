@@ -12,7 +12,7 @@ const query = async (text, values) => {
   }
 };
 
-let listenerClient = null;
+let listenClient = null;
 
 const messageQuery = async () => {
   const pusher = new Pusher({
@@ -26,11 +26,11 @@ const messageQuery = async () => {
   const startListener = async () => {
     try {
       // If we already have a listener client, don't create a new one
-      if (listenerClient) return;
+      if (listenClient) return;
 
-      listenerClient = await listenClient.connect();
+      listenClient = await listenClient.connect();
 
-      listenerClient.on("notification", (msg) => {
+      listenClient.on("notification", (msg) => {
         console.log("🟡 PG notify received");
         console.log("🟡 channel:", msg.channel);
         console.log("🟡 raw payload:", msg.payload);
@@ -52,23 +52,23 @@ const messageQuery = async () => {
         });
       });
 
-      listenerClient.on("error", (err) => {
+      listenClient.on("error", (err) => {
         console.error("❌ PG listener error:", err);
         try {
-          listenerClient.release();
+          listenClient.release();
         } catch {}
-        listenerClient = null;
+        listenClient = null;
         setTimeout(startListener, 2000);
       });
 
-      await listenerClient.query("LISTEN watch_messages");
+      await listenClient.query("LISTEN watch_messages");
       console.log("✅ Listening on Postgres channel watch_messages");
     } catch (err) {
       console.error("❌ Failed to start PG listener:", err);
       try {
-        if (listenerClient) listenerClient.release();
+        if (listenClient) listenClient.release();
       } catch {}
-      listenerClient = null;
+      listenClient = null;
       setTimeout(startListener, 2000);
     }
   };

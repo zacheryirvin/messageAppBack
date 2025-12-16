@@ -25,7 +25,7 @@ const messageQuery = async () => {
   const startListener = async () => {
     try {
       // If we already have a listener client, don't create a new one
-      if (listenClient) return;
+      //if (listenClient) return;
 
       listenClient = await listenClient.connect();
       await listenClient.query("LISTEN watch_messages");

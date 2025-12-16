@@ -1,12 +1,14 @@
 require("dotenv").config();
 const server = require("./server.js");
 const connectMongo = require("./database/mongo.js");
+const { messageQuery } = require("./database/query.js"); 
 
 const PORT = process.env.PORT || 4000;
 
 (async () => {
   try {
     await connectMongo();          // connect Mongo once at startup
+    await messageQuery();
     server.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
     });

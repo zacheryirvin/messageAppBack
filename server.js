@@ -5,7 +5,6 @@ const helm = require("helmet");
 
 const server = express();
 server.set("trust proxy", 1);
-const { messageQuery } = require("./database/query.js"); // adjust path to where you exported it
 
 const restrictedCheck = require("./routes/helpers/helpers.js").restricted;
 
@@ -54,9 +53,6 @@ const middle = async (req, res, next) => {
   );
   next();
 };
-if (process.env.NODE_ENV === "production" || process.env.START_LISTENER === "true") {
-  messageQuery().catch((err) => console.error("❌ messageQuery failed:", err));
-}
 
 
 //(async () => {

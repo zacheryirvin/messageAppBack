@@ -1,5 +1,5 @@
 require("dotenv").config();
-const pool = require("./config.js");
+const {pool, listenClient} = require("./config.js");
 const Pusher = require("pusher");
 
 const query = async (text, values) => {
@@ -28,7 +28,7 @@ const messageQuery = async () => {
       // If we already have a listener client, don't create a new one
       if (listenerClient) return;
 
-      listenerClient = await pool.connect();
+      listenerClient = await listenClient.connect();
 
       listenerClient.on("notification", (msg) => {
         console.log("🟡 PG notify received");

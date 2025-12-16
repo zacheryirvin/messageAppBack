@@ -12,4 +12,6 @@ const pool = new Pool({
   ssl: isProduction ? { rejectUnauthorized: false } : false,
 });
 
-module.exports = pool;
+const listenClient = new Client({process.env.DB_URI_DIRECT, ssl});
+
+module.exports = {pool, listenClient};

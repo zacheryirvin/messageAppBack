@@ -31,13 +31,24 @@ const messageQuery = async () => {
       listenerClient = await pool.connect();
 
       listenerClient.on("notification", async (msg) => {
+	console.log("PG notify recieved");
+	console.log("channel:", msg.channel);
+	console.log("ray payload:", msg.payload);
+	let payload;
         try {
-          const payload = JSON.parse(msg.payload);
+          payload = msg.payload ? JSON.parse(msg.payload) : {};
+	} catch (e) {
+          console.log("JSON parse failed, using raw payload");
+	  payload = {raw: msg.payload}
+	}
 
-          await pusher.trigger("watch_messages", "new_record", payload);
-          console.log("✅ Pusher triggered new_record");
-        } catch (e) {
-          console.error("❌ Pusher trigger/parse failed:", e);
+	  pusher.trigger("watch_messages", "new_record", payload, (err) => {
+            if (err) {
+	      console.log("trigger error:", err);
+	    } else {
+	      console.log("pusher triggered new_record")
+	    }
+	  });
         }
       });
 

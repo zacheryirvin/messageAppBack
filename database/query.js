@@ -28,6 +28,8 @@ const messageQuery = async () => {
       if (listenClient) return;
 
       listenClient = await listenClient.connect();
+      await listenClient.query("LISTEN watch_messages");
+      console.log("✅ Listening on Postgres channel watch_messages");
 
       listenClient.on("notification", (msg) => {
         console.log("🟡 PG notify received");
@@ -60,8 +62,6 @@ const messageQuery = async () => {
         setTimeout(startListener, 2000);
       });
 
-      await listenClient.query("LISTEN watch_messages");
-      console.log("✅ Listening on Postgres channel watch_messages");
     } catch (err) {
       console.error("❌ Failed to start PG listener:", err);
       try {

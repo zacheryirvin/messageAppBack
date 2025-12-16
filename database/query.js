@@ -27,7 +27,7 @@ const messageQuery = async () => {
       // If we already have a listener client, don't create a new one
       //if (listenClient) return;
 
-      listenClient = await listenClient.connect();
+      let listenClient = await listenClient.connect();
       await listenClient.query("LISTEN watch_messages");
       console.log("✅ Listening on Postgres channel watch_messages");
 

@@ -48,9 +48,9 @@ const messageQuery = async () => {
 	    } else {
 	      console.log("pusher triggered new_record")
 	    }
-	  });
+	  })
         }
-      });
+      )};
 
       listenerClient.on("error", (err) => {
         console.error("❌ PG listener error:", err);

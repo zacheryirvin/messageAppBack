@@ -1,37 +1,36 @@
 require("dotenv").config();
-const {pool, listenClient} = require("./config.js");
+const { pool, listenClient } = require("./config.js");
 const Pusher = require("pusher");
 
-const query = async (text, values) => {
-  const client = await pool.connect();
-  try {
-    const result = await client.query(text, values);
-    return result;
-  } finally {
-    client.release();
-  }
-};
+// Create pusher once (not per reconnect)
+const pusher = new Pusher({
+  appId: process.env.PH_APPID,
+  key: process.env.PH_KEY,
+  secret: process.env.PH_SECRET,
+  cluster: process.env.PH_CLUSTER,
+  useTLS: true,
+});
 
+// Normal queries: use pool directly
+const query = (text, values) => pool.query(text, values);
+
+// Listener state guards
+let listenerStarted = false;
 
 const messageQuery = async () => {
-  const pusher = new Pusher({
-    appId: process.env.PH_APPID,
-    key: process.env.PH_KEY,
-    secret: process.env.PH_SECRET,
-    cluster: process.env.PH_CLUSTER,
-    useTLS: true,
-  });
+  if (listenerStarted) {
+    console.log("ℹ️ PG listener already started");
+    return;
+  }
+  listenerStarted = true;
 
   const startListener = async () => {
     try {
-      // If we already have a listener client, don't create a new one
-      //if (listenClient) return;
+      // connect() returns void; do NOT assign it
+      await listenClient.connect();
 
-      let listenerClient = await listenClient.connect();
-      await listenClient.query("LISTEN watch_messages");
-      console.log("✅ Listening on Postgres channel watch_messages");
-
-      listenerClient.on("notification", (msg) => {
+      // Attach handlers BEFORE/AFTER connect is fine, but do it once
+      listenClient.on("notification", (msg) => {
         console.log("🟡 PG notify received");
         console.log("🟡 channel:", msg.channel);
         console.log("🟡 raw payload:", msg.payload);
@@ -45,30 +44,42 @@ const messageQuery = async () => {
         }
 
         pusher.trigger("watch_messages", "new_record", payload, (err) => {
-          if (err) {
-            console.log("❌ trigger error:", err);
-          } else {
-            console.log("✅ pusher triggered new_record");
-          }
+          if (err) console.log("❌ trigger error:", err);
+          else console.log("✅ pusher triggered new_record");
         });
       });
 
-      listenerClient.on("error", (err) => {
+      listenClient.on("error", async (err) => {
         console.error("❌ PG listener error:", err);
+
+        // IMPORTANT: Client has no release(). Use end(), then reconnect.
         try {
-          listenerClient.release();
+          await listenClient.end();
         } catch {}
-        listenerClient = null;
-        setTimeout(startListener, 2000);
+
+        // allow restart
+        listenerStarted = false;
+
+        setTimeout(() => {
+          messageQuery().catch(console.error);
+        }, 2000);
       });
 
+      await listenClient.query("LISTEN watch_messages");
+      console.log("✅ Listening on Postgres channel watch_messages");
     } catch (err) {
       console.error("❌ Failed to start PG listener:", err);
+
+      // If connect/query failed, close and retry
       try {
-        if (listenerClient) listenerClient.release();
+        await listenClient.end();
       } catch {}
-      listenerClient = null;
-      setTimeout(startListener, 2000);
+
+      listenerStarted = false;
+
+      setTimeout(() => {
+        messageQuery().catch(console.error);
+      }, 2000);
     }
   };
 

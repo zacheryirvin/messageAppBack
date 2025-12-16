@@ -36,7 +36,7 @@ const friendsTb = {
     or user_id = '${toId}' and friend_id = '${userId}'
     `);
   },
-  getFriendSuggestions: (userId, limit = 10) => {
+  getFriendSuggestions: async (userId, limit = 10) => {
     const sql = `
       WITH my_friends AS (
         SELECT friend_id
@@ -48,6 +48,7 @@ const friendsTb = {
         FROM friends f
         JOIN my_friends mf ON f.user_id = mf.friend_id
         WHERE f.confirmed = true
+          AND f.friend_id <> $1
       ),
       mutual_counts AS (
         SELECT suggested_id, COUNT(*) AS mutual_count
@@ -58,10 +59,8 @@ const friendsTb = {
         SELECT $1::uuid AS id
         UNION
         SELECT friend_id FROM friends WHERE user_id = $1
-        UNION
-        SELECT user_id FROM friends WHERE friend_id = $1
       )
-      SELECT 
+      SELECT
         u.id,
         u.first_name,
         u.last_name,
@@ -75,7 +74,8 @@ const friendsTb = {
       LIMIT $2;
     `;
 
-    const result = query(sql, [userId, limit]);
+  // IMPORTANT: await the query, then return rows
+    const result = await query(sql, [userId, limit]);
     return result.rows;
   }
 

@@ -64,7 +64,9 @@ router.post('/', restrictedCheck, async (req, res) => {
 
     // Insert into Postgres
     const sendMessage = await messageDb.addMessage(userId, toId, message);
+    console.log(sendMessage);
     const pgMessage = sendMessage?.rows?.[0];
+    console.log(pgMessage);
 
     // Mirror into Mongo
     await MongoMessage.create({

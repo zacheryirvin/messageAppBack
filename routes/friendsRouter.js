@@ -142,7 +142,7 @@ router.delete("/", restrictedCheck, async (req, res) => {
 router.get("/suggestions", restrictedCheck, async (req, res) => {
   try {
     const id = req.session.user.id;
-    const limit = Number(req.query.limit || 10);
+    const limit = Number(10);
 
     // pass limit if your db function supports it
     const suggestions = await friendsDb.getFriendSuggestions(id, limit);

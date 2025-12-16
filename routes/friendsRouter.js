@@ -144,12 +144,15 @@ router.get("/suggestions", restrictedCheck, async (req, res) => {
     const id = req.session.user.id;
     const limit = Number(req.query.limit || 10);
 
+    // pass limit if your db function supports it
     const suggestions = await friendsDb.getFriendSuggestions(id, limit);
+
     return res.status(200).json(suggestions.rows);
   } catch (err) {
     console.log(err);
-    return res.status(500).json("error");
+    return res.status(500).json(err);
   }
 });
+
 
 module.exports = router;

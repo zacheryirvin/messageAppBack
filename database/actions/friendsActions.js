@@ -76,6 +76,7 @@ const friendsTb = {
 
   // IMPORTANT: await the query, then return rows
     const result = await query(sql, [userId, limit]);
+    console.log(result);
     return result.rows;
   }
 

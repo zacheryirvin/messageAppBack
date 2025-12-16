@@ -10,7 +10,7 @@ const restrictedCheck = require("./routes/helpers/helpers.js").restricted;
 
 const session = require("express-session");
 const pgSession = require("connect-pg-simple")(session);
-const pool = require("./database/config.js");
+const {pool} = require("./database/config.js");
 const sessionOptions = {
   store: new pgSession({
     pool: pool,

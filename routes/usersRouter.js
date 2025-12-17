@@ -14,7 +14,7 @@ const MongoUser = require("../database/mongoModels/user");
 router.post("/register", async (req, res) => {
   const newUser = req.body;
 
-  if (!(newUser.user_name && newUser.password && newUser.email)) {
+  if (!(newUser.first_name, && newUser.last_name && newUser.user_name && newUser.password && newUser.email)) {
     return res
       .status(400)
       .json({ Error: "Username, email, and password are required" });

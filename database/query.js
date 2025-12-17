@@ -29,11 +29,7 @@ const messageQuery = async () => {
       // connect() returns void; do NOT assign it
       await listenClient.connect();
 
-      // Attach handlers BEFORE/AFTER connect is fine, but do it once
       listenClient.on("notification", (msg) => {
-        console.log("🟡 PG notify received");
-        console.log("🟡 channel:", msg.channel);
-        console.log("🟡 raw payload:", msg.payload);
 
         let payload;
         try {

@@ -30,6 +30,7 @@ router.post("/register", async (req, res) => {
 
     // fetch full PG user row (includes id)
     const user_data = await usersDb.getUser(newUser.user_name);
+    console.log(user_data);
     const pgUser = user_data.rows[0];
 
     if (!pgUser) {
